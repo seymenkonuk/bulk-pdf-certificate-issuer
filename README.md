@@ -1,197 +1,256 @@
-# Generate Certificate
-> Python dilinde, .PDF uzantılı sertifikalar üreten konsol uygulaması.
+# Bulk PDF Certificate Issuer
+> SVG şablonlarından kimlik ve QR doğrulama içeren kişiselleştirilmiş PDF sertifikaları üreten Python uygulaması.
 
 ## Açıklama
-Sunduğu özellikler:
-- Özelleştirilebilir sertifika tasarımı
-- Özelleştirilebilir sertifika metni
-- QR kod ile sertifika doğrulama
-- [Mail Sender](https://github.com/seymenkonuk/mail_sender) ile entegre olarak, sertifikaları ilgili kişilere hızlı bir şekilde mail olarak gönderebilme
 
-![](assets/demo/running.gif)
+Katılımcı bilgilerini TSV dosyasından okuyarak kişiselleştirilmiş PDF sertifikaları toplu biçimde üreten bir konsol uygulamasıdır. Sertifika tasarımındaki ve mesaj şablonundaki değişkenleri her katılımcı için doldurur, benzersiz bir sertifika kimliği oluşturur ve hazırlanan SVG dosyasını Inkscape üzerinden PDF biçimine dönüştürür.
 
-## İçindekiler
-<ol>
-	<li>
-		<a href="#başlangıç">Başlangıç</a>
-		<ul>
-			<li><a href="#bağımlılıklar">Bağımlılıklar</a></li>
-			<li><a href="#kurulum">Kurulum</a></li>
-			<li><a href="#yapılandırma">Yapılandırma</a></li>
-			<li><a href="#çalıştırma">Çalıştırma</a></li>
-		</ul>
-	</li>
-	<li><a href="#dizin-yapısı">Dizin Yapısı</a></li>
-	<li><a href="#lisans">Lisans</a></li>
-	<li><a href="#Iletişim">İletişim</a></li>
-</ol>
+Her sertifika için doğrulama bağlantısını içeren bir QR kod oluşturulur. Üretilen sertifikaların kimlikleri kayıt altında tutulur ve gerektiğinde kimlikleri üzerinden iptal edilebilir. Her çalıştırmada, yeni oluşturulan sertifikalar için [Personalized Bulk Email Sender](https://github.com/seymenkonuk/personalized-bulk-email-sender) ile uyumlu bir TSV dosyası hazırlanır. Oluşturulan bu dosya ve ilgili araç kullanılarak sertifikalar ilgili kişilere hızlı ve toplu biçimde e-posta yoluyla gönderilebilir.
 
-## Başlangıç
-### Bağımlılıklar
-Proje aşağıdaki işletim sistemlerinde test edilmiştir:
-- **Debian**
+## Özellikler
 
-Projenin düzgün çalışabilmesi için aşağıdaki yazılımların sisteminizde kurulu olması gerekir:
-- **Python Yorumlayıcısı 3.9**
-- **pip**
-- **inkscape**
-- **Docker** (docker ortamında çalıştıracaksanız)
+- TSV dosyasından katılımcı listesi okuma
+- Her katılımcı için kişiselleştirilmiş sertifika oluşturma
+- Özelleştirilebilir SVG sertifika tasarımları
+- Her sertifika için benzersiz kimlik oluşturma
+- Doğrulama bağlantısı içeren QR kod üretme
+- SVG dosyalarını PDF biçimine dönüştürme
+- PDF içindeki metinleri yola dönüştürme
+- Üretilen sertifikaların kimliklerini kayıt altında tutma
+- Sertifikaları kimlikleri üzerinden iptal etme
+- [Personalized Bulk Email Sender](https://github.com/seymenkonuk/personalized-bulk-email-sender) ile uyumlu TSV dosyası oluşturma
+- Docker ile çalıştırma
 
-<p align="right">(<a href="#generate-certificate">back to top</a>)</p>
+## Kurulum
 
----
+Proje Python 3.9 ile çalışacak şekilde hazırlanmıştır.
 
-### Kurulum
-1. Bu repository'yi kendi bilgisayarınıza klonlayın:
-	```bash
-	git clone https://github.com/seymenkonuk/generate_certificate.git
-	```
+Gerekli yazılımlar:
 
-2. Projeye gidin:
-	```bash
-	cd generate_certificate
-	```
+- Python 3.9 veya üzeri
+- Inkscape
+- Docker ve Docker Compose (isteğe bağlı)
 
-<p align="right">(<a href="#generate-certificate">back to top</a>)</p>
+> 💡 **Not:** Programın Docker üzerinden çalıştırılması tavsiye edilir.
 
----
+Projeyi klonlayın:
+
+```bash
+git clone https://github.com/seymenkonuk/bulk-pdf-certificate-issuer.git
+cd bulk-pdf-certificate-issuer
+```
+
+Python bağımlılıklarını yükleyin:
+
+```bash
+pip install -r requirements.txt
+```
+
+> 💡 **Not:** QR kodlar çevrim içi bir servis üzerinden oluşturulduğu için uygulama çalışırken internet bağlantısı gereklidir.
+
+## Yapılandırma
+
+### Genel Ayarlar
+
+`settings/settings.conf` dosyasını düzenleyin:
+
+```ini
+[General]
+certificate_template_svg=assets/templates/certificate/basic.svg
+certificate_verification_base_url=https://example.com/certificates
+certificate_verification_include_file_extension=true
+certificate_id_length=10
+text_to_path=true
+
+[Message]
+certificate_message_template=assets/templates/message/example1
+certificate_message_x_coordinate=144.28885
+certificate_message_y_coordinate=121.16418
+certificate_message_row_height=10
+certificate_message_row_max_length=70
+```
+
+- `certificate_template_svg`: Kullanılacak SVG sertifika şablonunun yolu
+- `certificate_verification_base_url`: QR kodun yönlendireceği temel doğrulama adresi
+- `certificate_verification_include_file_extension`: Doğrulama bağlantısına `.pdf` uzantısının eklenip eklenmeyeceği
+- `certificate_id_length`: Oluşturulacak sertifika kimliğinin karakter sayısı
+- `text_to_path`: PDF oluşturulurken metinlerin yola dönüştürülüp dönüştürülmeyeceği
+- `certificate_message_template`: Kullanılacak mesaj şablonu dizininin yolu
+- `certificate_message_x_coordinate`: Mesajın SVG üzerindeki yatay başlangıç konumu
+- `certificate_message_y_coordinate`: Mesajın SVG üzerindeki dikey başlangıç konumu
+- `certificate_message_row_height`: Mesaj satırları arasındaki dikey mesafe
+- `certificate_message_row_max_length`: Bir satırda bulunabilecek yaklaşık en fazla karakter sayısı
+
+> 💡 **Not:** Mesaj konumu ve satır ayarları kullanılan SVG şablonuna göre düzenlenmelidir.
+
+> 💡 **Not:** `text_to_path` değeri `true` olduğunda sertifikadaki metinler PDF oluşturulurken yola dönüştürülür. Bu işlem, kullanılan yazı tiplerinin alıcı cihazda kurulu olmadığı durumlarda görünümün korunmasını sağlar.
+
+### Mesaj Şablonu
+
+Yeni bir mesaj şablonu oluşturunuz veya varolan mesaj şablonunu (`assets/templates/message/example1`) düzenleyiniz:
+
+> 💡 **Not:** Her mesaj şablonu, `message.conf` ve `message.txt` dosyalarını içeren bir dizindir. 
+
+`message.conf` dosyasında tüm sertifikalar için ortak sabitleri tanımlayın:
+
+```ini
+[Constant]
+EVENT_NAME=Example Event
+START_DATE=01.01.2026
+END_DATE=30.01.2026
+```
+
+> 💡 **Not:** `message.conf` dosyasında ortak sabit kullanılmasa bile `[Constant]` bölümü bulunmalıdır.
+
+`message.txt` dosyasında ortak sabitleri `{{#DEGISKEN#}}`, katılımcıya özel değerleri ise `{{$DEGISKEN$}}` biçiminde kullanın:
+
+```text
+{{#START_DATE#}} ile {{#END_DATE#}} tarihleri arasında gerçekleştirilen
+{{#EVENT_NAME#}} eğitimine katılımınızdan dolayı
+bu belgeyi almaya hak kazandınız.
+
+Katılımcı: {{$NAME$}}
+Başarı Puanı: {{$SCORE$}}
+```
+
+> 💡 **Not:** Değişken adları büyük-küçük harfe duyarlıdır.
+
+> 💡 **Not:** Katılımcı değişkenleri `new_participants.tsv` dosyasında tanımlanmalıdır.
+
+> 💡 **Not:** Katılımcı değişkenlerinin adları `new_participants.tsv` dosyasındaki sütunlarla aynı olmalıdır.
+
+> 💡 **Not:** Mesaj satırları boşluk karakterleri esas alınarak bölünür. Belirlenen satır uzunluğunu aşan kesintisiz ifadelerden kaçınılmalıdır.
+
+### Sertifika Şablonu
+
+Yeni bir sertifika tasarımı oluşturunuz veya var olan SVG şablonlarından birini düzenleyiniz.
+
+Sertifika şablonunda mesaj sabitleri ve katılımcı değişkenlerinin yanında aşağıdaki özel değişkenler de kullanılabilir:
+
+- `{{CERTIFICATE_ID}}`: Oluşturulan benzersiz sertifika kimliği
+- `{{QR_CODE}}`: Oluşturulan QR kod görselinin mutlak dosya yolu
+- `{{MESSAGE}}`: Mesaj şablonundan hazırlanan ve satırlara ayrılan sertifika metni
+
+> 💡 **Not:** SVG şablonundaki `{{MESSAGE}}` alanının metin özellikleri ve konumu, genel ayarlardaki koordinatlarla uyumlu olmalıdır.
+
+### Katılımcı Listesi
+
+Sertifika oluşturulacak kişileri ve kişiye özel verileri `inputs/new_participants.tsv` dosyasına sekmeyle (tab) ayrılmış biçimde ekleyin:
+
+```text
+NAME	EMAIL
+Recep	recep@example.com
+Seymen	seymen@example.com
+```
+
+Zorunlu sütunlar:
+
+- `NAME`: Katılımcının adı
+- `EMAIL`: Katılımcının e-posta adresi
+
+TSV dosyasına istenildiği kadar sütun eklenebilir. Eklenen sütunlarda bulunan değerler mesaj ve sertifika şablonlarında katılımcı değişkeni olarak kullanılabilir:
+
+```text
+NAME	EMAIL	SCORE
+Recep	recep@example.com	100
+Seymen	seymen@example.com	90
+```
+
+
+> 💡 **Not:** Microsoft Excel'den kopyalanan tablo verileri sekmeyle ayrılmış olarak yapıştırılabilir.
+
+> 💡 **Not:** Uygulama çalıştırıldıktan sonra `new_participants.tsv` dosyası otomatik olarak temizlenir.
+
+### İptal Edilecek Sertifikalar
+
+İptal edilecek sertifikaların kimliklerini `inputs/revoked_certificates.lst` dosyasına her satıra bir kimlik gelecek biçimde ekleyin:
+
+```text
+Ab12Cd34Ef
+Xy98Zt76Qr
+```
+
+Uygulama çalıştırıldığında bu kimliklere ait:
+
+- PDF sertifika dosyaları,
+- QR kod görselleri,
+- `all_issued_certificates.lst` içindeki kayıtlar
+
+silinir.
+
+> 💡 **Not:** Uygulama çalıştırıldığında önce `revoked_certificates.lst` dosyasındaki sertifikalar iptal edilir, daha sonra `new_participants.tsv` dosyasındaki sertifikalar üretilir.
+
+> 💡 **Not:** Uygulama çalıştırıldıktan sonra `revoked_certificates.lst` dosyası otomatik olarak temizlenir.
+
+## Çalıştırma
+
+### Docker
+
+Önce Docker imajını oluşturun:
+
+```bash
+docker compose build
+```
+
+Uygulamayı çalıştırın:
+
+```bash
+docker compose run --rm bulk-pdf-certificate-issuer 
+```
+
+Bu komut proje dizinini container içindeki `/app` dizinine bağlar. Oluşturulan sertifikalar ve diğer çıktılar yerel `outputs/` dizinine kaydedilir.
+
+> 💡 **Not:** Sisteminizde Docker ve Docker Compose kurulu olmalıdır.
+
+### Python
+
+Uygulamayı Docker kullanmadan proje kök dizininden doğrudan çalıştırabilirsiniz:
+
+```bash
+python src/main.py
+```
+
+> 💡 **Not:** Sisteminizde Python ve Inkscape kurulu olmalıdır.
+
+> 💡 **Not:** Inkscape komutunun sistem yolundan erişilebilir olması gerekir.
+
+> 💡 **Not:** Doğrudan Python ile çalıştırırken sertifika şablonunda kullanılan yazı tiplerinin sistemde kurulu olması gerekir. Docker imajı, `assets/fonts/` dizinindeki yazı tiplerini otomatik olarak yükler.
+
+## Çıktılar
+
+Uygulama çalıştırıldığında aşağıdaki dosyalar oluşturulur veya güncellenir:
+
+```text
+outputs/
+├── certificates/
+│   ├── <certificate_id>.pdf
+│   ├── all_issued_certificates.lst
+│   └── latest_issued_certificates.lst
+├── qrcodes/
+│   └── <certificate_id>.png
+└── mailsend.tsv
+```
+
+- `certificates/<certificate_id>.pdf`: Katılımcı için oluşturulan PDF sertifikası
+- `qrcodes/<certificate_id>.png`: Sertifika doğrulama bağlantısını içeren QR kod
+- `all_issued_certificates.lst`: İptal edilmemiş tüm sertifika kimlikleri
+- `latest_issued_certificates.lst`: Son çalıştırmada oluşturulan sertifika kimlikleri
+- `mailsend.tsv`: Son çalıştırmada oluşturulan sertifikaların e-posta gönderim listesi
+
+> 💡 **Not:** `latest_issued_certificates.lst` ve `mailsend.tsv` her çalıştırmada sıfırlanarak yeniden oluşturulur.
+
+> 💡 **Not:** `all_issued_certificates.lst` önceki çalıştırmalarda oluşturulan ve iptal edilmemiş sertifika kimliklerini korur.
+
+## Galeri
+
+### Sertifika Oluşturma
+
+![Sertifika oluşturma](assets/demo/running.gif)
 
 ### Yapılandırma
-1. Sertifika tasarımınızı yapınız ve .SVG uzantılı olarak dışa aktarınız.
-2. Şablonunuzu `assets/templates/certificate` dizinine taşıyınız.
-3. Sertifikanızda yazacak yazı için bir şablon oluşturmak için `assets/templates/message/` dizini altına **"<şablon_ismi>"** adında bir dizin oluşturun. 
-4. Bu dizinin altına **message.conf** ve **message.txt** adında iki dosya oluşturun.
-5. **message.txt** dosyasının içine mesaj olarak yazmasını istediğiniz metni yazınız.
-	```
-	Example Organizer tarafından 
-	01.01.2025 tarihinde gerçekleştirilen
-	Example Event etkinliğine katılımınızdan dolayı 
-	bu belgeyi almaya hak kazandınız.
-	```
-6. **message.txt** dosyasında 3 farklı değişken ekleyebilirsiniz:
-	- **Mesaj Sabitleri**: her etkinlikte değişen bilgiler için kullanabilirsiniz.
-		```
-		{{#EVENT_ORGANIZER#}} tarafından 
-		{{#EVENT_DATE#}} tarihinde gerçekleştirilen
-		{{#EVENT_NAME#}} etkinliğine katılımınızdan dolayı 
-		bu belgeyi almaya hak kazandınız.
-		```
-	- **Kişi Değişkenleri**: kişiye göre değişen veriler için kullanabilirsiniz.
-		```
-		{{#EVENT_ORGANIZER#}} tarafından 
-		{{#EVENT_DATE#}} tarihinde gerçekleştirilen
-		{{#EVENT_NAME#}} etkinliğine katılımınızdan dolayı 
-		bu belgeyi almaya hak kazandınız.
 
-		Başarı Yüzdesi: {{$BASARI$}}/100
-		```
-	- **Özel Değişkenler**: hazır olarak 3 değişken sunulmaktadır.
-		- `{{CERTIFICATE_ID}}`: rastgele üretilen benzersiz sertifika ID'si
-		- `{{QR_CODE}}`: üretilen QR kodun path bilgisi
-		- `{{MESSAGE}}`: **message.txt dosyasında bu değişken kullanılmamalıdır!**
-7. Mesaj sabitlerini **message.conf** dosyasına tanımlayınız.
-	```
-	[Constant]
-	EVENT_ORGANIZER=Example Community
-	EVENT_NAME=Example Event
-	EVENT_DATE=01.01.2025
-	```
-8. Kişi değişkenlerini **inputs/new_participants.tsv** dosyasına tanımlayınız.
-	```
-	NAME	EMAIL	BASARI
-	Deneme1	Deneme1	90
-	Deneme2	Deneme2	70
-	```
-9. Sertifikada da değişkenleri kullanabilirsiniz.
-10. Sertifikada mesajın yazmasını istediğiniz yer için `{{MESSAGE}}` değişkenini kullanınız.
-11.  `settings/settings.conf` dosyasına kullanacağınız sertifika ve mesaj şablonunu tanımlayınız.
-		```
-		[General]
-		certificate_template_svg=basic.svg
-
-		[Message]
-		certificate_message_template=example1
-		```
-12. `settings/settings.conf` dosyasına `{{MESSAGE}}` ile ilgili ayarları ve doğrulama ile ilgili ayarları ekleyiniz.
-	```
-	[General]
-	certificate_template_svg=basic.svg
-	certificate_verification_base_url=https://recepseymenkonuk.com/sertifikalar
-	certificate_verification_include_file_extension=true
-	certificate_id_length=10
-	text_to_path=true
-
-	[Message]
-	certificate_message_template=example1
-	certificate_message_x_coordinate=144.28885
-	certificate_message_y_coordinate=121.16418
-	certificate_message_row_height=10
-	certificate_message_row_max_length=70
-	```
-
-![](assets/demo/config.gif)
-
-<p align="right">(<a href="#generate-certificate">back to top</a>)</p>
-
----
-
-### Çalıştırma
-
-Uygulama **Docker** üzerinden kolayca çalıştırılabilir.
-
-- **Docker image almak için**:
-
-	```bash
-	make build
-	```
-
-- **Projeyi çalıştırmak için**:
-
-	```bash
-	make run
-	```
-
-<p align="right">(<a href="#generate-certificate">back to top</a>)</p>
-
----
-
-## Dizin Yapısı
-```
-├── generate_certificate/
-│   ├── assets/			
-│   │   ├── demo/			#Proje sonuç video ve resimleri
-│   │   ├── fonts/			#Sertifikada kullanılan fontların .TTF uzantılı dosyaları
-│   │   └── templates/			#şablonlar
-│   │       ├── certificate/		#.SVG uzantılı sertifika şablonu
-│   │       └── message/		#sertifikanın üzerinde yazacak mesaj için şablon
-│   ├── inputs/				#projenin girdi dosyaları
-│   ├── outputs/			#projenin çıktı dosyaları
-│   │       ├── certificates/		#üretilen sertifikaların yer aldığı dizin
-│   │       └── qrcodes/		#üretilen qr kodların yer aldığı dizin
-│   ├── settings/			#ayar dosyaları
-│   └── src/				#projenin kaynak kodları
-```
-
-<p align="right">(<a href="#generate-certificate">back to top</a>)</p>
-
----
+![Yapılandırma](assets/demo/config.gif)
 
 ## Lisans
-Bu proje [MIT Lisansı](https://github.com/seymenkonuk/generate_certificate/blob/main/LICENSE) ile lisanslanmıştır.
 
-<p align="right">(<a href="#generate-certificate">back to top</a>)</p>
-
----
-
-## Iletişim
-Proje ile ilgili sorularınız veya önerileriniz için bana ulaşabilirsiniz:
-
-GitHub: https://github.com/seymenkonuk
-
-LinkedIn: https://www.linkedin.com/in/recep-seymen-konuk/
-
-Proje Bağlantısı: [https://github.com/seymenkonuk/generate_certificate](https://github.com/seymenkonuk/generate_certificate)
-
-<p align="right">(<a href="#generate-certificate">back to top</a>)</p>
-
----
+Bu proje [MIT Lisansı](https://github.com/seymenkonuk/bulk-pdf-certificate-issuer/blob/main/LICENSE) ile lisanslanmıştır.
