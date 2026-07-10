@@ -20,5 +20,5 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Çalıştırma
-ENTRYPOINT ["python"]
-CMD ["src/main.py"]
+
+ENTRYPOINT ["python", "src/main.py"]

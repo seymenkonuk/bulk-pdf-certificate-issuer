@@ -1,0 +1,6 @@
+services:
+  bulk-pdf-certificate-issuer:
+    build:
+      context: .
+    volumes:
+      - .:/app
