@@ -68,8 +68,8 @@ def convert_formatted_svg_text(text):
 def get_message_content():
 	global svg_content
 	# Mesaj Template'ini Oku
-	message["content"] = read_file(f"assets/templates/message/{message['temp_path']}/message.txt")
-	message_conf = read_conf_file(f"assets/templates/message/{message['temp_path']}/message.conf")
+	message["content"] = read_file(f"{message['temp_path']}/message.txt")
+	message_conf = read_conf_file(f"{message['temp_path']}/message.conf")
 	# Mesaj Template'teki Constant'ları Düzelt
 	for key, value in message_conf["Constant"].items():
 		message["content"] = message["content"].replace("{{#"+key+"#}}", value)
@@ -93,7 +93,7 @@ def get_settings():
 	settings["file_extension"] = ".pdf" if str2bool(info["settings"]["General"]["certificate_verification_include_file_extension"]) else ""
 	settings["id_length"] = int(info["settings"]["General"]["certificate_id_length"])
 	settings["text_to_path"] = str2bool(info["settings"]["General"]["text_to_path"])
-	svg_content = read_binary_file(f"assets/templates/certificate/{settings['svg_path']}")
+	svg_content = read_binary_file(f"{settings['svg_path']}")
 
 # GEREKLİ TÜM DOSYALARI OKUR
 def get_info():
@@ -148,7 +148,7 @@ def generate_certificate(participant):
 	# dosyaya ekle
 	append_lst_file("outputs/certificates/all_issued_certificates.lst", [certificate_id])
 	# mail göndermek için gerekli dosyaya ekle
-	append_lst_file("outputs/mailsend.tsv", [f"{participant['EMAIL']}\t{participant['NAME']}\t{certificate_id}.pdf"])
+	append_lst_file("outputs/mailsend.tsv", [f"{participant['EMAIL']}\t{participant['NAME']}\tcertificates/{certificate_id}.pdf"])
 
 # INPUT DOSYASINDAKİ TÜM KİŞİLERE BİRER SERTİFİKA OLUŞTURUR
 def generate_certificates():
