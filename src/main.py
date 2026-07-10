@@ -159,6 +159,8 @@ def generate_certificates():
 	# Sertifikaları Üret
 	for participant in info["new_participants"]:
 		generate_certificate(participant)
+	# Dosyayı Güncelle
+	write_lst_file(f"inputs/new_participants.lst", ["NAME\tEMAIL"])
 
 # PARAMETRE OLARAK ALDIĞI ID'LI SERTİFİKAYI İPTAL EDER
 def revoked_certificate(certificate_id):
