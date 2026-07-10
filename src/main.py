@@ -90,7 +90,7 @@ def get_settings():
 	global svg_content
 	settings["svg_path"] = info["settings"]["General"]["certificate_template_svg"]
 	settings["base_url"] = info["settings"]["General"]["certificate_verification_base_url"]
-	settings["file_extension"] = ".pdf" if info["settings"]["General"]["certificate_verification_include_file_extension"] else ""
+	settings["file_extension"] = ".pdf" if str2bool(info["settings"]["General"]["certificate_verification_include_file_extension"]) else ""
 	settings["id_length"] = int(info["settings"]["General"]["certificate_id_length"])
 	settings["text_to_path"] = str2bool(info["settings"]["General"]["text_to_path"])
 	svg_content = read_binary_file(f"assets/templates/certificate/{settings['svg_path']}")
